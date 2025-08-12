@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sui 链复杂商业模式分析工具</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+        @media (min-width: 768px) {
+            .container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        .card {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12);
+        }
+        h1, h2, h3 {
+            font-weight: 700;
+            color: #1a2a47;
+            margin-bottom: 20px;
+        }
+        p.description {
+            color: #666;
+            margin-bottom: 25px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        .input-group input, .input-group select {
+            width: 95%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            box-sizing: border-box;
+        }
+        .input-group input:focus, .input-group select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+        .result-box {
+            padding: 25px;
+            background-color: #eaf6ff;
+            border-radius: 10px;
+            border-left: 5px solid #007bff;
+        }
+        .result-item {
+            margin-bottom: 12px;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .result-item strong {
+            color: #1a2a47;
+        }
+        .result-value {
+            font-weight: 700;
+            color: #007bff;
+        }
+        .analysis-text {
+            margin-top: 25px;
+            font-style: italic;
+            color: #555;
+            line-height: 1.8;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card">
+            <h1>Sui 链复杂商业模式分析工具</h1>
+            <p class="description">通过调整多维度变量，深入分析潜在市场规模和盈利能力。</p>
+
+            <h2>核心参数</h2>
+            <div class="input-group">
+                <label for="suiGrowth">Sui 生态增长情景</label>
+                <select id="suiGrowth">
+                    <option value="0.7">悲观（低速增长）</option>
+                    <option value="1.0" selected>中性（稳定增长）</option>
+                    <option value="1.5">乐观（高速增长）</option>
+                </select>
+                <small>该情景会影响潜在项目方数量。</small>
+            </div>
+
+            <div class="input-group">
+                <label for="platformFee">平台抽成比例 (%)</label>
+                <input type="number" id="platformFee" value="3" min="0" max="100">
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+
+            <h3>项目募资模型</h3>
+            <p class="description">请估算不同项目类型在 Sui 链上的占比，这会影响平均募资额。</p>
+            <div class="input-group">
+                <label for="gamefiShare">GameFi 项目占比 (%)</label>
+                <input type="number" id="gamefiShare" value="40" min="0" max="100">
+            </div>
+            <div class="input-group">
+                <label for="defiShare">DeFi 项目占比 (%)</label>
+                <input type="number" id="defiShare" value="30" min="0" max="100">
+            </div>
+            <div class="input-group">
+                <label for="socialfiShare">SocialFi 项目占比 (%)</label>
+                <input type="number" id="socialfiShare" value="30" min="0" max="100">
+            </div>
+            <small>请确保总和为 100%。</small>
+
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+
+            <h3>用户服务费模型</h3>
+            <div class="input-group">
+                <label for="avgUsersPerProject">平均每个项目的参与用户数</label>
+                <input type="number" id="avgUsersPerProject" value="1000" min="0">
+            </div>
+            <div class="input-group">
+                <label for="feeType">选择服务费模式</label>
+                <select id="feeType">
+                    <option value="fixed">固定费用</option>
+                    <option value="percentage">百分比费率</option>
+                </select>
+            </div>
+            
+            <div id="fixedFeeGroup" class="input-group">
+                <label for="fixedFee">每次领取的固定费用 (SUI)</label>
+                <input type="number" id="fixedFee" value="0.1" min="0" max="0.1" step="0.01">
+            </div>
+            <div id="percentageFeeGroup" class="input-group hidden">
+                <label for="percentageFee">每次领取的百分比费率 (%)</label>
+                <input type="number" id="percentageFee" value="0.5" min="0" max="5" step="0.1">
+                <small>（基于用户领取的代币价值）</small>
+            </div>
+
+            <div class="input-group">
+                <label for="userSensitivity">用户对服务费的敏感度</label>
+                <input type="range" id="userSensitivity" min="0" max="10" value="5">
+                <p>当前敏感度：<span id="sensitivityValue">5</span></p>
+                <small>敏感度越高，服务费对代币领取率的影响越大。</small>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>分析结果</h2>
+            <div class="result-box">
+                <div class="result-item">
+                    <span>预估项目方数量</span>
+                    <span class="result-value"><span id="estimatedProjects">0</span> 个</span>
+                </div>
+                <div class="result-item">
+                    <span>平台抽成收入</span>
+                    <span class="result-value">$<span id="raiseRevenue">0</span></span>
+                </div>
+                 <div class="result-item">
+                    <span>用户服务费收入</span>
+                    <span class="result-value">$<span id="serviceRevenue">0</span></span>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #ddd;">
+                <div class="result-item">
+                    <span>预估年度总收入</span>
+                    <span class="result-value">$<span id="totalRevenue">0</span></span>
+                </div>
+                <div class="result-item">
+                    <span>年度总成本</span>
+                    <span class="result-value">$<span id="totalCost">0</span></span>
+                </div>
+                <div class="result-item">
+                    <span>预估年度净利润</span>
+                    <span class="result-value">$<span id="netProfit">0</span></span>
+                </div>
+            </div>
+            <p class="analysis-text" id="analysisText"></p>
+
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+
+            <h3>年度成本估算</h3>
+            <div class="input-group">
+                <label for="devCost">研发与运维成本 (USD)</label>
+                <input type="number" id="devCost" value="150000" min="0">
+            </div>
+            <div class="input-group">
+                <label for="marketingCost">市场与合规成本 (USD)</label>
+                <input type="number" id="marketingCost" value="50000" min="0">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 核心输入
+            const suiGrowthSelect = document.getElementById('suiGrowth');
+            const platformFeeInput = document.getElementById('platformFee');
+            const gamefiShareInput = document.getElementById('gamefiShare');
+            const defiShareInput = document.getElementById('defiShare');
+            const socialfiShareInput = document.getElementById('socialfiShare');
+            const avgUsersPerProjectInput = document.getElementById('avgUsersPerProject');
+            const feeTypeSelect = document.getElementById('feeType');
+            const fixedFeeGroup = document.getElementById('fixedFeeGroup');
+            const fixedFeeInput = document.getElementById('fixedFee');
+            const percentageFeeGroup = document.getElementById('percentageFeeGroup');
+            const percentageFeeInput = document.getElementById('percentageFee');
+            const userSensitivityInput = document.getElementById('userSensitivity');
+            const devCostInput = document.getElementById('devCost');
+            const marketingCostInput = document.getElementById('marketingCost');
+
+            // 结果展示
+            const estimatedProjectsSpan = document.getElementById('estimatedProjects');
+            const raiseRevenueSpan = document.getElementById('raiseRevenue');
+            const serviceRevenueSpan = document.getElementById('serviceRevenue');
+            const totalRevenueSpan = document.getElementById('totalRevenue');
+            const totalCostSpan = document.getElementById('totalCost');
+            const netProfitSpan = document.getElementById('netProfit');
+            const analysisText = document.getElementById('analysisText');
+            const sensitivityValueSpan = document.getElementById('sensitivityValue');
+
+            // 假设常量
+            const BASE_PROJECTS = 50; // 基础项目数量
+            const AVG_RAISE_GAMEFI = 800000; // GameFi 项目平均募资额
+            const AVG_RAISE_DEFI = 1500000; // DeFi 项目平均募资额
+            const AVG_RAISE_SOCIALFI = 300000; // SocialFi 项目平均募资额
+            const SUI_PRICE_USD = 1.0; // 假设 1 SUI = 1 USD
+
+            // 切换服务费输入框
+            feeTypeSelect.addEventListener('change', () => {
+                if (feeTypeSelect.value === 'fixed') {
+                    fixedFeeGroup.classList.remove('hidden');
+                    percentageFeeGroup.classList.add('hidden');
+                } else {
+                    fixedFeeGroup.classList.add('hidden');
+                    percentageFeeGroup.classList.remove('hidden');
+                }
+                calculateAndDisplay();
+            });
+
+            function calculateAndDisplay() {
+                const suiGrowthFactor = parseFloat(suiGrowthSelect.value) || 1.0;
+                const platformFee = parseFloat(platformFeeInput.value) || 0;
+                const gamefiShare = parseFloat(gamefiShareInput.value) || 0;
+                const defiShare = parseFloat(defiShareInput.value) || 0;
+                const socialfiShare = parseFloat(socialfiShareInput.value) || 0;
+                const avgUsersPerProject = parseFloat(avgUsersPerProjectInput.value) || 0;
+                const userSensitivity = parseFloat(userSensitivityInput.value) || 0;
+                const devCost = parseFloat(devCostInput.value) || 0;
+                const marketingCost = parseFloat(marketingCostInput.value) || 0;
+                
+                // 1. 估算项目方数量 (动态)
+                const estimatedProjects = BASE_PROJECTS * suiGrowthFactor;
+
+                // 2. 估算平均募集资金 (加权平均)
+                const avgRaise = (gamefiShare / 100) * AVG_RAISE_GAMEFI +
+                                 (defiShare / 100) * AVG_RAISE_DEFI +
+                                 (socialfiShare / 100) * AVG_RAISE_SOCIALFI;
+                
+                // 3. 平台抽成收入
+                const raiseRevenue = (estimatedProjects * avgRaise * (platformFee / 100));
+
+                // 4. 用户服务费收入 (动态，受敏感度影响)
+                let serviceRevenue = 0;
+                const totalUsers = estimatedProjects * avgUsersPerProject;
+                
+                let claimingRate = 0;
+                if (feeTypeSelect.value === 'fixed') {
+                    const fixedFee = parseFloat(fixedFeeInput.value) || 0;
+                    // 代币领取率 = 基础领取率 - 敏感度 * 服务费
+                    const baseClaimingRate = 80; // 假设无费用时为80%
+                    claimingRate = Math.max(0, baseClaimingRate - userSensitivity * (fixedFee / 0.1) * 10);
+                    serviceRevenue = (totalUsers * (claimingRate / 100)) * fixedFee * SUI_PRICE_USD;
+                } else { // percentage mode
+                    const percentageFee = parseFloat(percentageFeeInput.value) || 0;
+                    // 代币领取率 = 基础领取率 - 敏感度 * 百分比费率
+                    const baseClaimingRate = 80;
+                    claimingRate = Math.max(0, baseClaimingRate - userSensitivity * (percentageFee / 5) * 10);
+                    // 估算代币领取价值：假设用户总共领取代币的价值为 avgRaise
+                    const totalClaimingValue = estimatedProjects * avgRaise;
+                    serviceRevenue = totalClaimingValue * (percentageFee / 100) * (claimingRate / 100);
+                }
+
+                // 5. 总收入和净利润
+                const totalRevenue = raiseRevenue + serviceRevenue;
+                const totalCost = (parseFloat(devCostInput.value) || 0) + (parseFloat(marketingCostInput.value) || 0);
+                const netProfit = totalRevenue - totalCost;
+
+                // 更新UI
+                estimatedProjectsSpan.textContent = Math.round(estimatedProjects);
+                raiseRevenueSpan.textContent = raiseRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                serviceRevenueSpan.textContent = serviceRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                totalRevenueSpan.textContent = totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                totalCostSpan.textContent = totalCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                netProfitSpan.textContent = netProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                sensitivityValueSpan.textContent = userSensitivity;
+
+                generateAnalysis(netProfit, totalRevenue, totalCost, raiseRevenue, serviceRevenue, claimingRate);
+            }
+
+            function generateAnalysis(netProfit, totalRevenue, totalCost, raiseRevenue, serviceRevenue, claimingRate) {
+                let text = '';
+                if (netProfit > 0) {
+                    text = `在当前情景下，预估年度净利润为 $${netProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}。其中，平台抽成收入为 $${raiseRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}，用户服务费收入为 $${serviceRevenue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}。`;
+                    if (claimingRate < 50) {
+                        text += `警告：当前服务费设置导致代币领取率仅为 ${claimingRate.toFixed(2)}%，可能会严重影响用户体验和平台声誉。建议降低服务费以提高领取率。`;
+                    } else if (claimingRate < 80) {
+                        text += `注意：服务费对代币领取率产生了影响，当前领取率为 ${claimingRate.toFixed(2)}%。在增加收入的同时，需密切关注用户反馈。`;
+                    } else {
+                         text += `用户服务费提供了可观的补充收入，同时保持了较高的代币领取率。`;
+                    }
+                } else {
+                    text = `在您设定的参数下，预估年度净利润为 $${netProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}。总成本高于总收入。您可能需要调整市场情景、提高抽成比例，或通过调整服务费来寻找盈利平衡点。`;
+                }
+                analysisText.textContent = text;
+            }
+
+            // 监听所有输入事件
+            [suiGrowthSelect, platformFeeInput, gamefiShareInput, defiShareInput, socialfiShareInput, avgUsersPerProjectInput, feeTypeSelect, fixedFeeInput, percentageFeeInput, userSensitivityInput, devCostInput, marketingCostInput].forEach(element => {
+                element.addEventListener('input', calculateAndDisplay);
+            });
+            
+            calculateAndDisplay();
+        });
+    </script>
+</body>
+</html>
